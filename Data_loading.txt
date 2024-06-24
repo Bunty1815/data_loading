@@ -1,0 +1,134 @@
+								Snowflake Realtime Training 
+									   Session-9
+							------------------------------
+							         Data Loading 
+									 
+					1) Bulk loading 
+                    2) Continiuos loading 	-> Snow pipe 	
+
+
+CREATE or replace TABLE  OUR_FIRST_DB .PUBLIC.LOAN_PAYMENT  (
+   Loan_ID  STRING,
+   loan_status  STRING,
+   Principal  STRING,
+   terms  STRING,
+   effective_date  STRING,
+   due_date  STRING,
+   paid_off_time  STRING,
+   past_due_days  STRING,
+   age  STRING,
+   education  STRING,
+   Gender  STRING);
+
+   create or replace database OUR_FIRST_DB;
+
+
+   COPY INTO LOAN_PAYMENT
+    FROM s3://bucketsnowflakes3/Loan_payments_data.csv
+    file_format = (type = csv 
+                   field_delimiter = ',' 
+                   skip_header=1);
+    
+
+//Validate
+ SELECT * FROM LOAN_PAYMENT;
+
+
+
+ delete from LOAN_PAYMENT;
+
+----------internal stage -------------
+	Stage can be internal/external locations .
+	
+	
+	1) create internal stage 
+	2) load data into stages 
+	3) from satge you can copy into table 
+	
+	
+	internal stages:
+	-------------------
+
+//create stage 
+CREATE OR REPLACE STAGE MY_INTER_STAGE;
+
+//load data into stage 
+put file://D:\files\Session-9 Data loading.csv @MY_INTER_STAGE;
+
+//describe satges 
+list @MY_INTER_STAGE
+
+//copy data from stages 
+copy into LOAN_PAYMENT_2 from @MY_INTER_STAGE
+file_format = (type = csv 
+                   field_delimiter = ',' 
+                   skip_header=1);
+
+select * from LOAN_PAYMENT_2;
+
+
+
+drop table LOAN_PAYMENT_2
+
+
+--------------------external stages ------------------
+
+// Database to manage stage objects, fileformats etc.
+
+CREATE OR REPLACE DATABASE MANAGE_DB;
+
+CREATE OR REPLACE SCHEMA external_stages;
+
+
+// Creating external stage
+CREATE OR REPLACE STAGE MANAGE_DB.external_stages.aws_stage
+    url='s3://bucketsnowflakes3';
+
+
+// Description of external stage
+
+DESC STAGE MANAGE_DB.external_stages.aws_stage; 
+    
+    
+// Alter external stage   
+
+
+// Publicly accessible staging area    
+
+CREATE OR REPLACE STAGE MANAGE_DB.external_stages.aws_stage
+    url='s3://bucketsnowflakes3';
+
+// List files in stage
+
+LIST @aws_stage;
+
+//Load data using copy command
+
+COPY INTO OUR_FIRST_DB.PUBLIC.LOAN_PAYMENT
+    FROM @aws_stage
+    file_format= (type = csv field_delimiter=',' skip_header=1)
+    pattern='.*Loan.*';
+
+
+
+
+delete from OUR_FIRST_DB .PUBLIC.LOAN_PAYMENT;
+
+select * from OUR_FIRST_DB .PUBLIC.LOAN_PAYMENT;
+ 
+
+
+TASK : load the data into loan payments and orders table 
+
+CREATE OR REPLACE TABLE OUR_FIRST_DB.PUBLIC.ORDERS (
+    ORDER_ID VARCHAR(30),
+    AMOUNT INT,
+    PROFIT INT,
+    QUANTITY INT,
+    CATEGORY VARCHAR(30),
+    SUBCATEGORY VARCHAR(30));
+
+
+
+ 					
+									 
