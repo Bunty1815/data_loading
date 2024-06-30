@@ -1,0 +1,60 @@
+create or replace database COPY_DB;
+-----------table--------
+CREATE OR REPLACE TABLE  COPY_DB.PUBLIC.ORDERS (
+    ORDER_ID VARCHAR(30),
+    AMOUNT VARCHAR(30),
+    PROFIT INT,
+    QUANTITY INT,
+    CATEGORY VARCHAR(30),
+    SUBCATEGORY VARCHAR(30)); 
+    
+    -------------create stage-----
+
+    CREATE OR REPLACE STAGE COPY_DB.PUBLIC.aws_stage_copy
+    url='s3://snowflakebucket-copyoption/size/';
+
+
+    LIST @COPY_DB.PUBLIC.aws_stage_copy;
+    
+-----------data loaded into table-----------
+
+COPY INTO COPY_DB.PUBLIC.ORDERS
+    FROM @aws_stage_copy
+    file_format= (type = csv field_delimiter=',' skip_header=1)
+    pattern='.*Order.*'
+    VALIDATION_MODE = RETURN_ERRORS
+
+    select * from COPY_DB.PUBLIC.ORDERS
+
+
+    -------------error files-----------
+
+     CREATE OR REPLACE STAGE COPY_DB.PUBLIC.aws_stage_copy
+    url='s3://snowflakebucket-copyoption/returnfailed/';
+
+
+    
+CREATE OR REPLACE table Rejected AS
+select rejected_record from table(result_scan(last_query_id()));
+
+select rejected_record from rejected
+
+--------------create a table for error records---------
+
+create or replace table rejected_values as
+select
+split_part(rejected_record,',',1) as order_id,
+split_part(rejected_record,',',2) as amount,
+split_part(rejected_record,',',3) as profit,
+split_part(rejected_record,',',4) as quantity,
+split_part(rejected_record,',',5) as catagiry,
+split_part(rejected_record,',',6) as subcatagiry
+from rejected;
+
+select *  from rejected_values
+
+delete  from rejected_values
+
+
+
+    

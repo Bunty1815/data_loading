@@ -1,0 +1,42 @@
+CREATE OR REPLACE stage MANAGE_DB.EXTERNAL_STAGES.JSONSTAGE
+     url='s3://bucketsnowflake-jsondemo';
+
+     list @MANAGE_DB.EXTERNAL_STAGES.JSONSTAGE
+
+     create schema MANAGE_DB.FILE_FORMATS
+
+     CREATE OR REPLACE file format MANAGE_DB.FILE_FORMATS.JSONFORMAT
+    TYPE = JSON;
+
+    CREATE OR REPLACE table OUR_FIRST_DB.PUBLIC.JSON_RAW (
+    raw_file variant);
+    
+describe table OUR_FIRST_DB.PUBLIC.JSON_RAW
+
+copy into OUR_FIRST_DB.PUBLIC.JSON_RAW
+from @MANAGE_DB.EXTERNAL_STAGES.JSONSTAGE
+file_format=MANAGE_DB.FILE_FORMATS.JSONFORMAT
+files=('HR_data.json')
+
+COPY INTO OUR_FIRST_DB.PUBLIC.JSON_RAW
+    FROM @MANAGE_DB.EXTERNAL_STAGES.JSONSTAGE
+    file_format= MANAGE_DB.FILE_FORMATS.JSONFORMAT
+    files =('HR_data.json');
+
+    select * from OUR_FIRST_DB.PUBLIC.JSON_RAW
+
+    select RAW_FILE:city::String  as city,
+       RAW_FILE:first_name::String as first_name  ,
+       RAW_FILE: gender::String as gender 
+from OUR_FIRST_DB.PUBLIC.JSON_RAW;
+
+select $1:city  as city,
+from OUR_FIRST_DB.PUBLIC.JSON_RAW;
+
+select $2:first_name  as name,
+from OUR_FIRST_DB.PUBLIC.JSON_RAW;
+
+
+select $3:city  as city,
+$2:first_name as firstname,
+from OUR_FIRST_DB.PUBLIC.JSON_RAW;
